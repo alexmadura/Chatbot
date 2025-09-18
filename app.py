@@ -25,14 +25,21 @@ st.set_page_config(page_title="IPIPE Codelmair", layout="wide")
 # --- Custom CSS for Branding ---
 st.markdown("""
 <style>
-    /* Main background color */
+    /* Main background color for the app */
     .stApp {
-        background-color: #f0f2f6;
+        background-color: #1a1a1a; /* Dark Gray Background */
+        color: #fafafa; /* Light text for the main app */
     }
 
-    /* Sidebar styling */
+    /* Sidebar styling - remains light */
     [data-testid="stSidebar"] {
         background-color: #ffffff;
+        color: #1a1a1a; /* Text color for sidebar should be dark */
+    }
+
+    /* Ensure sidebar headers are dark */
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p {
+        color: #1a1a1a;
     }
 
     /* Button styling */
@@ -49,9 +56,20 @@ st.markdown("""
         color: white;
     }
 
-    /* Title and Header styling */
+    /* Title and Header styling for the main area */
     h1, h2, h3 {
-        color: #1a1a1a; /* Dark Gray for text */
+        color: #fafafa; /* Light Gray for text */
+    }
+
+    /* Chat message styling */
+    [data-testid="stChatMessage"] {
+        background-color: #2b2b2b; /* Slightly lighter than main background */
+        border-radius: 8px;
+    }
+
+    /* Ensure alerts have readable text on dark background */
+    [data-testid="stAlert"] {
+        color: #1a1a1a;
     }
 </style>
 """, unsafe_allow_html=True)
