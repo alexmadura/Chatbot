@@ -37,7 +37,7 @@ st.markdown("""
 
     /* Button styling */
     .stButton>button {
-        background-color: #ec6602; /* Healthy Orange */
+        background-color: #cf4b00; /* Accessible Orange */
         color: white;
         border: none;
         border-radius: 4px;
@@ -45,6 +45,7 @@ st.markdown("""
     }
     .stButton>button:hover {
         background-color: #cf4b00; /* Accessible Orange */
+        opacity: 0.9;
         color: white;
     }
 
