@@ -1,6 +1,7 @@
 import streamlit as st
 import ollama
 import os
+import subprocess
 from pypdf import PdfReader
 from langchain_community.chat_models import ChatOllama
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -75,7 +76,59 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# --- Helper Functions --- (No changes to these functions)
+# --- Helper Functions ---
+
+def get_gpu_info():
+    """Checks for NVIDIA GPU and returns its total memory in MiB."""
+    try:
+        # Run nvidia-smi command to get GPU memory
+        result = subprocess.check_output(
+            ['nvidia-smi', '--query-gpu=memory.total', '--format=csv,noheader,nounits'],
+            encoding='utf-8'
+        )
+        # The command returns a string like "12288\n", so we strip and convert to int
+        gpu_memory = int(result.strip())
+        return gpu_memory
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        # This will happen if nvidia-smi is not found (no NVIDIA GPU/drivers)
+        # or if the command fails for other reasons.
+        return None
+
+def get_finetuning_recommendation(vram_mb):
+    """Returns a recommendation based on the available VRAM in MiB."""
+    if vram_mb is None:
+        return (
+            "**Keine NVIDIA-GPU gefunden.** Finetuning ist auf dieser Maschine "
+            "nicht möglich, da das `nvidia-smi`-Kommando nicht gefunden wurde. "
+            "Bitte stellen Sie sicher, dass die NVIDIA-Treiber korrekt installiert sind.",
+            "error"
+        )
+
+    # Convert MiB to GiB for easier comparison
+    vram_gb = vram_mb / 1024
+
+    if vram_gb < 8:
+        return (
+            f"**GPU-Speicher: {vram_gb:.1f} GB.** Dieser Speicher ist für das "
+            "Finetuning von modernen Sprachmodellen leider nicht ausreichend.",
+            "error"
+        )
+    elif vram_gb < 16:
+        return (
+            f"**GPU-Speicher: {vram_gb:.1f} GB.** Mit diesem Speicher ist "
+            "experimentelles Finetuning mit speziellen Techniken (wie LoRA/PEFT) "
+            "möglich. Der Prozess kann jedoch langsam sein und erfordert eine "
+            "sorgfältige Konfiguration.",
+            "warning"
+        )
+    else: # vram_gb >= 16
+        return (
+            f"**GPU-Speicher: {vram_gb:.1f} GB.** Diese GPU ist gut für "
+            "experimentelles Finetuning geeignet. Sie können mit Techniken "
+            "wie LoRA/PEFT beginnen, um das Modell auf Ihren Daten zu trainieren.",
+            "success"
+        )
+
 def check_ollama_status():
     try:
         ollama.list()
@@ -186,6 +239,22 @@ with st.sidebar:
         3. Klicken Sie auf "Ordner verarbeiten".
         """
     )
+
+    st.divider()
+
+    st.subheader("Finetuning")
+    if st.button("Hardware-Check für Finetuning"):
+        with st.spinner("Überprüfe Hardware..."):
+            vram_mb = get_gpu_info()
+            recommendation, status = get_finetuning_recommendation(vram_mb)
+
+            if status == "success":
+                st.success(recommendation)
+            elif status == "warning":
+                st.warning(recommendation)
+            else: # error
+                st.error(recommendation)
+
 
 # Main chat interface
 st.header("Chat")
