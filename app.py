@@ -7,7 +7,6 @@ from langchain_community.chat_models import ChatOllama
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
-from chromadb.config import Settings
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -15,6 +14,10 @@ from langchain.chains import create_history_aware_retriever
 from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.documents import Document
+
+# --- TELEMETRY FIX ---
+# This environment variable must be set BEFORE anysthing from chromadb is imported.
+os.environ['CHROMA_SERVER_ANONYMIZED_TELEMETRY'] = 'False'
 
 # --- Constants ---
 CHROMA_PATH = "chroma_db"
@@ -168,11 +171,10 @@ def get_text_chunks_from_docs(docs):
     return text_splitter.split_documents(docs)
 
 def add_to_chroma(chunks):
-    # Initialize the Chroma client with telemetry disabled
+    # Initialize the Chroma client
     vector_store = Chroma(
         persist_directory=CHROMA_PATH,
-        embedding_function=OllamaEmbeddings(model="gemma:2b"),
-        client_settings=Settings(anonymized_telemetry=False)
+        embedding_function=OllamaEmbeddings(model="gemma:2b")
     )
 
     # Add documents to the store
@@ -184,8 +186,7 @@ def add_to_chroma(chunks):
 def get_vectorstore():
     return Chroma(
         persist_directory=CHROMA_PATH,
-        embedding_function=OllamaEmbeddings(model="gemma:2b"),
-        client_settings=Settings(anonymized_telemetry=False)
+        embedding_function=OllamaEmbeddings(model="gemma:2b")
     )
 
 def get_context_retriever_chain(vector_store):
