@@ -7,6 +7,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
+from chromadb.config import Settings
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -167,17 +168,25 @@ def get_text_chunks_from_docs(docs):
     return text_splitter.split_documents(docs)
 
 def add_to_chroma(chunks):
+    # Initialize the Chroma client with telemetry disabled
     vector_store = Chroma(
         persist_directory=CHROMA_PATH,
-        embedding_function=OllamaEmbeddings(model="gemma:2b")
+        embedding_function=OllamaEmbeddings(model="gemma:2b"),
+        client_settings=Settings(anonymized_telemetry=False)
     )
+
+    # Add documents to the store
     ids = [f"{chunk.metadata['source']}-{i}" for i, chunk in enumerate(chunks)]
     vector_store.add_documents(documents=chunks, ids=ids)
     vector_store.persist()
 
 # --- RAG Chain Creation --- (No changes to these functions)
 def get_vectorstore():
-    return Chroma(persist_directory=CHROMA_PATH, embedding_function=OllamaEmbeddings(model="gemma:2b"))
+    return Chroma(
+        persist_directory=CHROMA_PATH,
+        embedding_function=OllamaEmbeddings(model="gemma:2b"),
+        client_settings=Settings(anonymized_telemetry=False)
+    )
 
 def get_context_retriever_chain(vector_store):
     llm = ChatOllama(model="gemma:2b")
