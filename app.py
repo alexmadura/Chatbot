@@ -1,11 +1,6 @@
-# --- TELEMETRY FIX ---
-# This environment variable must be set BEFORE any other imports to prevent
-# the chromadb telemetry client from being initialized.
-import os
-os.environ['ANONYMIZED_TELEMETRY'] = 'False'
-
 import streamlit as st
 import ollama
+import os
 import subprocess
 from pypdf import PdfReader
 from langchain_community.chat_models import ChatOllama

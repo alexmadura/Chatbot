@@ -5,4 +5,4 @@ langchain-core
 ollama
 pypdf
 langchainhub
-chromadb
+chromadb==0.4.24
