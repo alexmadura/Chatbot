@@ -3,17 +3,21 @@ import ollama
 from pypdf import PdfReader
 from io import BytesIO
 from langchain_community.chat_models import ChatOllama
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
+from langchain_classic.chains.retrieval import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains import create_history_aware_retriever
+from langchain_classic.chains.history_aware_retriever import create_history_aware_retriever
 from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 
 # --- Helper Functions ---
+
+def file_list_hasher(files):
+    """Create a hash from a list of file-like objects."""
+    return "_".join([f"{file.name}_{file.size}" for file in files])
 
 @st.cache_data
 def check_ollama_status():
@@ -24,7 +28,7 @@ def check_ollama_status():
     except Exception:
         return False
 
-@st.cache_data
+@st.cache_data(hash_funcs={list: file_list_hasher})
 def get_text_from_files(files):
     """Extracts text from a list of uploaded files (PDFs and text-based)."""
     raw_text = ""
@@ -108,7 +112,7 @@ with st.sidebar:
 
     if uploaded_files:
         if st.button("2. Dateien verarbeiten"):
-            raw_text = get_text_from_files(tuple(uploaded_files))
+            raw_text = get_text_from_files(uploaded_files)
             if raw_text:
                 st.session_state.vector_store = get_vectorstore_from_text(hash(raw_text), raw_text)
                 st.success("Verarbeitung abgeschlossen!")
@@ -154,7 +158,7 @@ if prompt := st.chat_input("Stelle deine Frage hier..."):
             for chunk in stream:
                 if "answer" in chunk and chunk["answer"] is not None:
                     full_response += chunk["answer"]
-                    placeholder.markdown(full_response + "▌")
+                    placeholder.markdown(.getvalue() + "▌")
 
             placeholder.markdown(full_response)
             st.session_state.messages.append({"role": "assistant", "content": full_response})
