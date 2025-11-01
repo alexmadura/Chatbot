@@ -6,3 +6,4 @@ ollama
 pypdf
 faiss-cpu
 langchainhub
+Pillow
